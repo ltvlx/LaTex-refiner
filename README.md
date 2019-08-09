@@ -1,2 +1,2 @@
 # LaTex refiner
- A tool to clean LaTex projects
+ A small tool to help keeping LaTex projects free from unused references and, more importantly, unused figures.
