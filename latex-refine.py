@@ -1,5 +1,6 @@
 import codecs
 from pathlib import Path
+import shutil
 
 
 def __get_ref_list(tex_proj_root):
@@ -104,12 +105,56 @@ def analyse_figures_usage(tex_proj_root):
     print()
 
 
+def flatten_tex(tex_proj_root):
+    def _check_line_is_fig(line):
+        if line.find('\includegraphics') != -1 and line.find('{') != -1:
+            return True
+        return False
+
+    def _get_fig_path(line):
+        a = line.find('{')
+        b = line.find('}')
+
+        if a == -1 or b == -1 or a+1 == b:
+            return ''
+        else:
+            return line[a+1:b]
+
+    def _flatten_fig_path(fig_path):
+        return fig_path.replace('/', '--')
+
+    path_out = tex_proj_root / 'flat/'
+    path_out.mkdir(parents=True, exist_ok=True)
+
+
+
+    for fpath in tex_proj_root.glob('*.tex'):
+        print('\n', '$'*50, '\n', fpath, fpath.name)
+        # key_exit = False
+        with codecs.open(fpath, 'r', encoding='utf-8') as fin:
+            with codecs.open(path_out / fpath.name, 'w', encoding='utf-8') as fout:
+                for line in fin:
+                    if _check_line_is_fig(line):
+                        fig_path = _get_fig_path(line)
+                        if len(fig_path) > 0:
+                            fig_path_mod = _flatten_fig_path(fig_path)
+                            line = line.replace(fig_path, fig_path_mod)
+                            # key_exit = True
+                            shutil.copy(tex_proj_root / fig_path, path_out / fig_path_mod)
+                    fout.write(line)
+                    # if key_exit:
+                    #     return
+
+
 
 # Path to a Latex project
 tex_proj_root = Path("C:\\Users\\ltvlx\\Documents\\GitHub\\PNAS-manuscript")
+tex_proj_root = Path("C:\\Users\\ltvlx\\YandexDisk\\Bremen\\Work\\My_articles\\2020-SN-model\\test-biomed-template\\article-v01")
+
 
 if tex_proj_root.exists():
-    analyse_references_usage(tex_proj_root)
-    analyse_figures_usage(tex_proj_root)
+    # analyse_references_usage(tex_proj_root)
+    # analyse_figures_usage(tex_proj_root)
+    flatten_tex(tex_proj_root)
 else:
     print("The given path does not exist!")
